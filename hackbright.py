@@ -107,6 +107,40 @@ def assign_grade(github, title, grade):
     print "Successfully added student grade."
 
 
+def add_project(title, description, max_grade):
+    """Add a new project to the project table in the database."""
+
+    QUERY = """
+            INSERT INTO projects (title, description, max_grade)
+            VALUES (:title, :description, :max_grade)
+    """
+
+    db.session.execute(QUERY, {
+        'title': title,
+        'description': description,
+        'max_grade': max_grade})
+
+    db.session.commit()
+
+    print "Successfully added project {} into database.".format(title)
+
+
+def get_grades_by_github_title(github):
+    """Print grade student received for a project."""
+    QUERY = """
+            SELECT student_github, project_title, grade
+            FROM grades
+            WHERE student_github = :github"""
+
+    db_cursor = db.session.execute(QUERY, {'github': github})
+
+    row = db_cursor.fetchall()
+
+    for item in row:
+        print "Student received {grade} on Project {title}.".format(
+        grade=item[2], title=item[1])
+
+
 def handle_input():
     """Main loop.
 
@@ -142,6 +176,12 @@ def handle_input():
             student, project_title, grade = args
             assign_grade(student, project_title, grade)
 
+        elif command == "add_project":
+            title = args[0]
+            project_title = " ".join(args[1:-1])
+            max_grade = args[-1]
+            add_project(title, project_title, max_grade)
+
         else:
             if command != "quit":
                 print "Invalid Entry. Try again."
@@ -150,7 +190,7 @@ def handle_input():
 if __name__ == "__main__":
     connect_to_db(app)
 
-    handle_input()
+    # handle_input()
 
     # To be tidy, we close our database connection -- though,
     # since this is where our program ends, we'd quit anyway.
